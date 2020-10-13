@@ -1,0 +1,89 @@
+import tester.*;
+
+class Block {  
+  int height;  
+  String color;  
+  
+  Block(int height, String color) {    
+    this.height = height;    
+    this.color = color;  
+  }
+  
+  // returns true if the height of this Block is greater than the height of that Block
+  boolean compareHeight(Block that) {
+    return this.height > that.height;
+  }
+}
+
+interface ILoBlock {
+  // returns the list of blocks that are strictly increasing in height
+  ILoBlock increasing();
+  
+  // accumulates blocks in order of increasing height for this ILoBlock
+  ILoBlock increasingAcc(Block prev);
+}
+
+class MtLoBlock implements ILoBlock {
+
+  @Override
+  public ILoBlock increasing() {
+    return this;
+  }
+
+  @Override
+  public ILoBlock increasingAcc(Block prev) {
+    return this;
+  } 
+}
+
+class ConsLoBlock implements ILoBlock {  
+  Block first;  
+  ILoBlock rest;  
+  
+  ConsLoBlock(Block first, ILoBlock rest) {    
+    this.first = first;    
+    this.rest = rest;  
+  }
+
+  @Override
+  public ILoBlock increasing() {
+    return this.rest.increasingAcc(this.first);
+  }
+
+  @Override
+  public ILoBlock increasingAcc(Block prev) {
+    if (this.first.compareHeight(prev)) {
+      
+      return new ConsLoBlock(prev, this.rest.increasingAcc(this.first));
+    }
+    else {
+      return new ConsLoBlock(prev, this.rest.increasingAcc(prev));
+    }
+  }
+}
+
+class ExamplesBlocks {    
+  Block redBlock1 = new Block(1, "red");    
+  Block redBlock2 = new Block(3, "red");    
+  Block blueBlock1 = new Block(2, "blue");    
+  Block blueBlock2 = new Block(4, "blue");    
+  ILoBlock mt = new MtLoBlock();    
+  ILoBlock list1 = new ConsLoBlock(blueBlock1, mt);    
+  ILoBlock list2 = new ConsLoBlock(redBlock2, list1);    
+  ILoBlock list3 = new ConsLoBlock(blueBlock1, list2);    
+  ILoBlock list4 = new ConsLoBlock(redBlock1, list3);
+  ILoBlock list5 = new ConsLoBlock(blueBlock1, 
+      new ConsLoBlock(redBlock1, 
+          new ConsLoBlock(redBlock2, mt)));
+  
+  boolean testIncreasing(Tester t) {
+    return t.checkExpect(this.mt.increasing(), this.mt)
+        && t.checkExpect(this.list4.increasing(),
+            new ConsLoBlock(this.redBlock1, 
+                new ConsLoBlock(this.blueBlock1, 
+                    new ConsLoBlock(this.redBlock2, this.mt))))
+        && t.checkExpect(this.list5.increasing(), 
+            new ConsLoBlock(this.blueBlock1, this.mt));
+  }
+  
+}

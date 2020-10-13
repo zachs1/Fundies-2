@@ -1,0 +1,10 @@
+// To represent a place of interest
+interface IPlaceOfInterest {}
+
+// to represent a Place
+class Place implements IPlaceOfInterest {
+  String name;
+  String features;
+  
+  
+}

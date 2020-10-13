@@ -1,0 +1,137 @@
+import tester.*;
+
+interface IBagelRecipe {
+  // is this IBagelRecipe the same as other?
+  boolean sameRecipe(BagelRecipe other);
+  
+  double PRECISION = 0.001;
+}
+
+class Utils {
+  /*
+  TEMPLATE
+  FIELDS:
+  METHODS:
+  ... this.checkEqual(double, double, string) ...     double
+  ... this.compareDoubles(double, double) ...         boolean
+  METHODS FOR FIELDS:
+  */
+  
+  // returns the first double if val1 and val2 are equivalent within precision
+  double checkEqual(double val1, double val2, String message) {
+    /* TEMPLATE: everything in the template for Utils*/
+    if (Math.abs(val1 - val2) < IBagelRecipe.PRECISION) {
+      return val1;
+    }
+    else {
+      throw new IllegalArgumentException(message);
+    }
+  }
+  
+  //returns true if val1 and val2 are equivalent within precision
+  boolean compareDoubles(double val1, double val2) {
+    /* TEMPLATE: everything in the template for Utils*/
+    return Math.abs(val1 - val2) < IBagelRecipe.PRECISION;
+  }
+}
+
+
+class BagelRecipe implements IBagelRecipe {
+  double flour;
+  double water;
+  double yeast;
+  double salt;
+  double malt;
+  /*
+  TEMPLATE
+  FIELDS:
+  ... this.flour ...                          -- double 
+  ... this.water ...                          -- double 
+  ... this.yeast ...                          -- double 
+  ... this.salt ...                          -- double 
+  ... this.matl ...                          -- double 
+  METHODS:
+  ... this.sameRecipe(IBagelRecipe) ...       -- boolean
+  METHODS FOR FIELDS:
+  */
+  BagelRecipe(double weightFlour, double weightWater, double weightYeast, double weightSalt,
+      double weightMalt) {
+    this.flour = new Utils().checkEqual(weightFlour, weightWater, 
+        "Flour weight (" + Double.toString(weightFlour)
+        + ") must equal water weight (" + Double.toString(weightWater) + ")");
+    this.water = weightWater;
+      
+    this.yeast = new Utils().checkEqual(weightYeast, weightMalt, 
+        "Yeast weight (" + Double.toString(weightYeast)
+        + ") must equal malt weight (" + Double.toString(weightMalt) + ")");
+    this.malt = weightMalt;
+    
+    this.salt = new Utils().checkEqual((weightSalt + weightYeast), weightFlour / 20, 
+        "Sum of salt weight and yeast weight (" + 
+            Double.toString(weightSalt + weightYeast) + ") must be 1/20th of flour weight (" +
+            Double.toString(weightFlour / 20) + ")");
+  }
+  
+  BagelRecipe(double weightFlour, double weightYeast) {
+    this.flour = weightFlour;
+    this.yeast = weightYeast;
+    this.water = weightFlour;
+    this.malt = weightYeast;
+    this.salt = weightFlour / 20 - weightYeast;
+  }
+  
+  BagelRecipe(double cupsFlour, double tspYeast, double tspSalt) {
+    this(cupsFlour * 4.25, 
+        cupsFlour * 4.25, 
+        tspYeast / 48 * 5, 
+        tspSalt / 48 * 10,
+        tspYeast / 48 * 5);
+  }
+
+  //is this IBagelRecipe the same as other?
+  @Override
+  public boolean sameRecipe(BagelRecipe other) {
+    Utils util = new Utils();
+    Double precision = 0.001;
+    return util.compareDoubles(this.flour, other.flour)
+        && util.compareDoubles(this.water, other.water)
+        && util.compareDoubles(this.yeast, other.yeast)
+        && util.compareDoubles(this.salt, other.salt)
+        && util.compareDoubles(this.malt, other.malt);
+  }
+  
+}
+
+class ExamplesBagelRecipe {
+  BagelRecipe b1 = new BagelRecipe(20.0, 20.0, 0.5, 0.5, 0.5);
+  BagelRecipe b2 = new BagelRecipe(5.5, 1.0);
+  BagelRecipe b3 = new BagelRecipe(20.0, 24.0, 8.4);
+  
+  boolean testBagelRecipe(Tester t) {
+    return t.checkConstructorException(new IllegalArgumentException(
+            "Flour weight (10.0) must equal water weight (5.0)"), 
+            "BagelRecipe", 
+            10.0, 5.0, 1.0, 1.0, 1.0)
+        && t.checkConstructorException(new IllegalArgumentException(
+            "Yeast weight (4.2) must equal malt weight (4.1)"),
+            "BagelRecipe",
+            10.0, 10.0, 4.2, 4.4, 4.1)
+        && t.checkConstructorException(new IllegalArgumentException(
+            "Sum of salt weight and yeast weight (6.2) must be 1/20th of flour weight (1.0)"),
+            "BagelRecipe",
+            20.0, 20.0, 4.2, 2.0, 4.2)
+        && t.checkConstructorException(new IllegalArgumentException(
+            "Sum of salt weight and yeast weight (0.3125) must be 1/20th of flour weight (0.2125)"),
+            "BagelRecipe",
+            1.0, 1.0, 1.0);
+  }
+  
+  boolean testSameRecipe(Tester t) {
+    return t.checkExpect(b1.sameRecipe(b1), true)
+        && t.checkExpect(b2.sameRecipe(b2), true)
+        && t.checkExpect(b1.sameRecipe(b2), false)
+        && t.checkExpect(b3.sameRecipe(b3), true)
+        && t.checkExpect(b3.sameRecipe(b1), false);
+  }
+}
+

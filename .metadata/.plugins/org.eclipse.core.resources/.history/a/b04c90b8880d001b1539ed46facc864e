@@ -1,0 +1,135 @@
+import tester.*;                // The tester library
+import java.util.Random;
+import javalib.worldimages.*;   // images, like RectangleImage or OverlayImages
+import javalib.funworld.*;      // the abstract World class and the big-bang library
+import java.awt.Color;          // general colors (as triples of red,green,blue values)
+                                // and predefined colors (Red, Green, Yellow, Blue, Black, White)
+
+
+class FishGame extends World {
+  int score;
+  Player player;
+
+  FishGame(int score, Player player) {
+    this.score = score;
+    this.player = player;
+  }
+
+  @Override
+  public WorldScene makeScene() {
+    return this.getEmptyScene();
+  }
+  
+  public World onkeyEvent(String ke) {
+    if (ke.equals("x"))
+      return this.endOfWorld("Goodbye");
+    else
+      return new FishGame(this.score, this.player.moveFish(ke));
+  }
+  
+  //On tick move the Blob in a random direction.
+  public World onTick() {
+      return new FishGame(this.score, this.player);
+  }
+  
+  //produce the last image of this world by adding text to the image 
+  public WorldScene lastScene(String s) {
+      return this.makeScene().placeImageXY(new TextImage(s, Color.red), 100,
+              40);
+  }
+  
+  //Check whether the Blob is out of bounds, or fell into the black hole in
+  // the middle.
+  public WorldEnd worldEnds() {
+    // TODO: Make this actual endgame screen 
+    return new WorldEnd(true, this.makeScene());
+ }
+}
+
+
+interface IFish {
+  int GAME_WIDTH = 800;
+  int GAME_HEIGHT = 600;
+}
+
+abstract class AFish implements IFish {
+  Color color;
+  double speedX;
+  int scale;
+  int x;
+  int y;
+  
+  AFish(Color color, double speedX, int scale, int x, int y) {
+    this.color = color;
+    this.speedX = speedX;
+    this.scale = scale;
+    this.x = x;
+    this.y = y;
+  }
+  
+  WorldImage fishImage() {
+    return new RectangleImage((int)this.scale * 5, (int)this.scale * 2, OutlineMode.SOLID, this.color);
+  }
+      
+}
+
+class Player extends AFish {
+  double speedY;
+
+
+
+  Player(Color color, double speedX, int scale, int x, int y, double speedY) {
+    super(color, speedX, scale, x, y);
+    if (this.x > IFish.GAME_WIDTH) {
+      this.x = IFish.GAME_WIDTH;
+    }
+    
+    else if(this.x < 0) {
+      this.x = 0;
+    }
+    
+    if (this.y > IFish.GAME_HEIGHT) {
+      this.y = IFish.GAME_HEIGHT;
+    }
+    
+    else if(this.y < 0) {
+      this.y = 0;
+    }
+    
+    this.speedY = speedY;
+  }
+
+
+
+  public Player moveFish(String ke) {
+    if (ke.equals("right")) {
+      return new Player(this.color, this.speedX, this.scale, this.x + 5, this.y, this.speedY);
+    } else if (ke.equals("left")) {
+        return new Player(this.color, this.speedX, this.scale, this.x - 5, this.y, this.speedY);
+    } else if (ke.equals("up")) {
+        return new Player(this.color, this.speedX, this.scale, this.x, this.y - 5, this.speedY);
+    } else if (ke.equals("down")) {
+        return new Player(this.color, this.speedX, this.scale, this.x, this.y + 5, this.speedY);
+    } else {
+      return this;
+    }
+  }
+
+  
+}
+
+class Fish extends AFish {
+
+  Fish(Color color, double speedX, int scale, int x, int y) {
+    super(color, speedX, scale, x, y);
+  }
+  
+}
+
+class ExamplesFishyGame {
+  
+  boolean testFishyGame(Tester t) {
+    FishGame fg = new FishGame(0, new Player(Color.orange, 0.0, 1, 400, 300, 0.0));
+    return fg.bigBang(IFish.GAME_WIDTH, IFish.GAME_HEIGHT);
+  }
+}

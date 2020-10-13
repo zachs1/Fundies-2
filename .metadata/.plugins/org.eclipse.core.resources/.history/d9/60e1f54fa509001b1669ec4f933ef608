@@ -1,0 +1,166 @@
+import tester.*;
+
+class Block {  
+  int height;  
+  String color;  
+  
+  Block(int height, String color) {    
+    this.height = height;    
+    this.color = color;  
+  }
+  
+  // returns true if the height of this Block is greater than the height of that Block
+  boolean compareHeight(Block that) {
+    return this.height > that.height;
+  }
+  
+  // is this block's color "red"?
+  boolean isRed() {
+    return this.color.compareTo("red") == 0;
+  }
+  
+  // is this Block's color "blue"?
+  boolean isBlue() {
+    return this.color.compareTo("blue") == 0;
+  }
+}
+
+interface ILoBlock {
+  // returns the list of blocks that are strictly increasing in height
+  ILoBlock increasing();
+  
+  // helps get the list of blocks in increasing order 
+  // by comparing heights of this Block and the prev
+  ILoBlock increasingHelp(Block prev);
+  
+  // does this list contain blocks alternating between red and blue colors, starting with red?
+  boolean alternatingRB();
+  
+  // helps determine if this ILoBlock alternates red and blue
+  boolean alternatingHelp(boolean expectRed);
+  
+}
+
+class MtLoBlock implements ILoBlock {
+
+  //returns the list of blocks that are strictly increasing in height, this in empty case
+  @Override
+  public ILoBlock increasing() {
+    return this;
+  }
+
+  //helps get the list of blocks in increasing order 
+  //always this in empty case
+  @Override
+  public ILoBlock increasingHelp(Block prev) {
+    return this;
+  }
+
+  //does this list contain blocks alternating between red and blue colors, starting with red?
+  //always true in empty case
+  @Override
+  public boolean alternatingRB() {
+    return true;
+  }
+
+  //helps determine if this ILoBlock alternates red and blue, always true in empty case
+  @Override
+  public boolean alternatingHelp(boolean expectRed) {
+    return true;
+  }
+
+}
+
+class ConsLoBlock implements ILoBlock {  
+  Block first;  
+  ILoBlock rest;  
+  
+  ConsLoBlock(Block first, ILoBlock rest) {    
+    this.first = first;    
+    this.rest = rest;  
+  }
+
+  //returns the list of blocks that are strictly increasing in height
+  @Override
+  public ILoBlock increasing() {
+    return this.rest.increasingHelp(this.first);
+  }
+
+  //helps get the list of blocks in increasing order 
+  //by comparing heights of this Block and the prev
+  @Override
+  public ILoBlock increasingHelp(Block prev) {
+    if (this.first.compareHeight(prev)) {
+      
+      return new ConsLoBlock(prev, this.rest.increasingHelp(this.first));
+    }
+    else {
+      return new ConsLoBlock(prev, new MtLoBlock());
+    }
+  }
+
+  //does this list contain blocks alternating between red and blue colors, starting with red?
+  @Override
+  public boolean alternatingRB() {
+    return this.alternatingHelp(true);
+  }
+
+  //helps determine if this ILoBlock alternates red and blue
+  @Override
+  public boolean alternatingHelp(boolean expectRed) {
+    if (expectRed && this.first.isRed()) {
+      return this.rest.alternatingHelp(false);
+    }
+    else if (!expectRed && this.first.isBlue()) {
+      return this.rest.alternatingHelp(true);
+    }
+    else {
+      return false;
+    }
+  }
+
+}
+
+class ExamplesBlocks {    
+  Block redBlock1 = new Block(1, "red");    
+  Block redBlock2 = new Block(3, "red");    
+  Block blueBlock1 = new Block(2, "blue");    
+  Block blueBlock2 = new Block(4, "blue");    
+  ILoBlock mt = new MtLoBlock();    
+  ILoBlock list1 = new ConsLoBlock(blueBlock1, mt);    
+  ILoBlock list2 = new ConsLoBlock(redBlock2, list1);    
+  ILoBlock list3 = new ConsLoBlock(blueBlock1, list2);    
+  ILoBlock list4 = new ConsLoBlock(redBlock1, list3);
+  ILoBlock list5 = new ConsLoBlock(blueBlock1, 
+      new ConsLoBlock(redBlock1, 
+          new ConsLoBlock(redBlock2, mt)));
+  
+  boolean testIncreasing(Tester t) {
+    return t.checkExpect(this.mt.increasing(), this.mt)
+        && t.checkExpect(this.list4.increasing(),
+            new ConsLoBlock(this.redBlock1, 
+                new ConsLoBlock(this.blueBlock1, 
+                    new ConsLoBlock(this.redBlock2, this.mt))))
+        && t.checkExpect(this.list5.increasing(), 
+            new ConsLoBlock(this.blueBlock1, this.mt));
+  }
+  
+  boolean testIncreasingHelp(Tester t) {
+    return t.checkExpect(this.mt.increasingHelp(this.blueBlock1), this.mt)
+        && t.checkExpect(this.list3.increasingHelp(redBlock1), 
+            new ConsLoBlock(this.redBlock1, 
+                new ConsLoBlock(this.blueBlock1, 
+                    new ConsLoBlock(this.redBlock2, this.mt))))
+  }
+  
+  boolean testAlternatingRB(Tester t) {
+    return t.checkExpect(this.mt.alternatingRB(), true)
+        && t.checkExpect(this.list4.alternatingRB(), true)
+        && t.checkExpect(this.list5.alternatingRB(), false)
+        && t.checkExpect(this.list1.alternatingRB(), false);
+  }
+  
+  boolean testAlternatingHelp(Tester t) {
+    return true;
+  }
+}

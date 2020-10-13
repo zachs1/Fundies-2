@@ -1,0 +1,56 @@
+// To represent a place of interest
+interface IPlaceOfInterest {}
+
+// to represent a Place
+class Place implements IPlaceOfInterest {
+  String name;
+  String features;
+  
+  Place(String name, String features) {
+    this.name = name;
+    this.features = features;
+  }
+}
+
+// to represent a Feature
+interface IFeature {}
+
+// to represent a Restaurant
+class Restaurant implements IFeature {
+  String name;
+  String type;
+  double rating;
+  
+  Restaurant(String name, String type, double rating) {
+    this.name = name;
+    this.type = type;
+    this.rating = rating;
+  }
+  
+}
+
+// to represent a Venue
+class Venue implements IFeature {
+  String name;
+  String type;
+  int maxCapacity;
+  
+  Venue(String name, String type, int maxCapacity) {
+    this.name = name;
+    this.type = type;
+    this.maxCapacity = maxCapacity;
+  }
+  
+}
+
+// to represent a Shuttle
+class Shuttle implements IFeature {
+  String name;
+  IPlaceOfInterest destination;
+  
+  Shuttle(String name, IPlaceOfInterest destination) {
+    this.name = name;
+    this.destination = destination;
+  } 
+  
+}

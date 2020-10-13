@@ -1,0 +1,85 @@
+import tester.*;
+
+interface IBagelRecipe {}
+
+class BagelRecipe implements IBagelRecipe {
+  double weightFlour;
+  double weightWater;
+  double weightYeast;
+  double weightSalt;
+  double weightMalt;
+  
+  BagelRecipe(double weightFlour, double weightWater, double weightYeast, double weightSalt,
+      double weightMalt) {
+    this.weightYeast = weightYeast;
+    this.weightSalt = weightSalt;
+    this.weightMalt = weightMalt;
+    
+    if(weightFlour == weightWater) {
+      this.weightFlour = weightFlour;
+      this.weightWater = weightWater;
+    }
+    else {
+      throw new IllegalArgumentException("Flour weight (" + Double.toString(weightFlour)
+        + ") must equal water weight (" + Double.toString(weightWater) + ")");
+    }
+    
+    if(weightYeast == weightMalt) {
+      this.weightYeast = weightYeast;
+      this.weightMalt = weightMalt;
+    }
+    else {
+      throw new IllegalArgumentException("Yeast weight (" + Double.toString(weightYeast)
+        + ") must equal malt weight (" + Double.toString(weightMalt) + ")");
+    }
+    
+    if((weightSalt + weightYeast) == weightFlour / 20) {
+      this.weightSalt = weightSalt;
+    }
+    else {
+      throw new IllegalArgumentException("Sum of salt weight and yeast weight (" + 
+          Double.toString(weightSalt + weightYeast) + ") must be 1/20th of flour weight (" +
+          Double.toString(weightFlour / 20) + ")");
+    }
+    
+  }
+  
+  BagelRecipe(double weightFlour, double weightYeast) {
+    this.weightFlour = weightFlour;
+    this.weightYeast = weightYeast;
+    this.weightWater = weightFlour;
+    this.weightMalt = weightYeast;
+    this.weightSalt = weightFlour / 20 - weightYeast;
+  }
+  
+  BagelRecipe(double cupsFlour, double tspYeast, double tspSalt) {
+    this(cupsFlour * 4.25, 
+        cupsFlour * 4.25, 
+        tspYeast / 48 * 5, 
+        tspSalt / 48 * 10,
+        tspYeast / 48 * 5);
+  }
+  
+}
+
+class ExamplesBagelRecipe {
+  boolean testBagelRecipe(Tester t) {
+    return t.checkConstructorException(new IllegalArgumentException(
+            "Flour weight (10.0) must equal water weight (5.0)"), 
+            "BagelRecipe", 
+            10.0, 5.0, 1.0, 1.0, 1.0)
+        && t.checkConstructorException(new IllegalArgumentException(
+            "Yeast weight (4.2) must equal malt weight (4.1)"),
+            "BagelRecipe",
+            10.0, 10.0, 4.2, 4.4, 4.1)
+        && t.checkConstructorException(new IllegalArgumentException(
+            "Sum of salt weight and yeast weight (6.2) must be 1/20th of flour weight (1.0)"),
+            "BagelRecipe",
+            20.0, 20.0, 4.2, 2.0, 4.2)
+        && t.checkConstructorException(new IllegalArgumentException(
+            "Sum of salt weight and yeast weight (0.3125) must be 1/20th of flour weight (4.25)"),
+            "BagelRecipe",
+            1.0, 1.0, 1.0);
+  }
+}
+

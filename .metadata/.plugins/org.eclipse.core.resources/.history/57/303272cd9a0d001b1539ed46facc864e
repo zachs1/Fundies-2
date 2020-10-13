@@ -1,0 +1,321 @@
+import tester.*;                // The tester library
+import java.util.Random;
+import javalib.worldimages.*;   // images, like RectangleImage or OverlayImages
+import javalib.funworld.*;      // the abstract World class and the big-bang library
+import java.awt.Color;          // general colors (as triples of red,green,blue values)
+                                // and predefined colors (Red, Green, Yellow, Blue, Black, White)
+
+interface ILoFish {
+  ILoFish generate();
+  
+  // acc: number fish we are currently producing
+  ILoFish generateAcc(int acc);
+  
+  // returns how many fish are in this ILoFish
+  int fishDepth();
+  
+  
+  // moves all fish in this list based on their speed
+  ILoFish moveAllFish();
+  
+  // adds a new randomly generated fish to this ILoFish
+  ILoFish addFish(); 
+  
+  // generates images for all fish in this list
+  WorldScene drawAllFish(WorldScene sceneSoFar);
+}
+
+class MtLoFish implements ILoFish {
+
+  @Override
+  public ILoFish generate() {
+    return generateAcc(7);
+  }
+
+  @Override
+  public ILoFish generateAcc(int acc) {
+    if(acc > 0) {
+      Random rand = new Random();
+      int scale = rand.nextInt(20) + 1;
+      int speedX = rand.nextInt(5) + 1;
+      int x;
+      if (speedX < 0) {
+        x = IConstants.GAME_WIDTH;
+      }     
+      else {
+        x = 0;
+      }
+      
+      return new ConsLoFish(new Fish(Color.pink, speedX, scale, x, rand.nextInt(IConstants.GAME_HEIGHT) + 1), 
+          this.generateAcc(acc - 1));
+    }
+    else {
+      return new MtLoFish();
+    }
+  }
+
+  @Override
+  public int fishDepth() {
+    return 0;
+  }
+
+  @Override
+  public ILoFish moveAllFish() {
+    return this;
+  }
+
+  @Override
+  public ILoFish addFish() {
+    return new ConsLoFish(new Fish(Color.pink, 0, 0), new MtLoFish());
+  }
+
+  @Override
+  public WorldScene drawAllFish(WorldScene sceneSoFar) {
+    return sceneSoFar;
+  }
+}
+
+class ConsLoFish implements ILoFish {
+  IFish first;
+  ILoFish rest;
+  
+  ConsLoFish(IFish first, ILoFish rest) {
+    this.first = first;
+    this.rest = rest;
+  }
+
+  @Override
+  public ILoFish generate() {
+    if (this.fishDepth() >= 10) {
+      return this.moveAllFish();
+    }
+    else {
+      return this.addFish().moveAllFish();
+    }
+  }
+
+  @Override
+  public ILoFish generateAcc(int acc) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public int fishDepth() {
+    return 1 + this.rest.fishDepth();
+  }
+
+  @Override
+  public ILoFish moveAllFish() {
+    return new ConsLoFish(this.first.move(), this.rest.moveAllFish());
+  }
+
+  @Override
+  public ILoFish addFish() {
+    return new ConsLoFish(new Fish(Color.pink, 0, 0), this);
+  }
+
+  @Override
+  public WorldScene drawAllFish(WorldScene sceneSoFar) {
+    return this.rest.drawAllFish(this.first.placeOnScene(sceneSoFar));
+  }
+  
+}
+
+interface IConstants {
+  int GAME_WIDTH = 800;
+  int GAME_HEIGHT = 600;
+  int MAX_FISH = 10;
+}
+
+class FishGame extends World {
+  int score;
+  Player player;
+  ILoFish fish;
+  
+  FishGame(int score, Player player, ILoFish fish) {
+    this.score = score;
+    this.player = player;
+    this.fish = fish;
+  }
+
+  @Override
+  public WorldScene makeScene() {
+    return this.fish.drawAllFish(this.getEmptyScene()).placeImageXY(this.player.fishImage(), this.player.x, this.player.y);
+  }
+  
+  public World onKeyEvent(String ke) {
+    if (ke.equals("x"))
+      return this.endOfWorld("Goodbye");
+    else
+      return new FishGame(this.score, this.player.moveFish(ke), this.fish);
+  }
+  
+  //On tick move the Blob in a random direction.
+  public World onTick() {
+      return new FishGame(this.score, this.player, this.fish.generate());
+  }
+  
+  //produce the last image of this world by adding text to the image 
+  public WorldScene lastScene(String s) {
+      return this.makeScene().placeImageXY(new TextImage(s, Color.red), 100,
+              40);
+  }
+  
+  //Check whether the Blob is out of bounds, or fell into the black hole in
+  // the middle.
+  public WorldEnd worldEnds() {
+    // TODO: Make this actual endgame screen 
+    return new WorldEnd(true, this.makeScene());
+ }
+}
+
+
+interface IFish {
+  // moves this fish based on it's current speed
+  IFish move();
+  
+  // returns the image representation of this IFish
+  WorldImage fishImage();
+  
+  // places the image of this fish onto the given scene
+  WorldScene placeOnScene(WorldScene sceneSoFar);
+}
+
+abstract class AFish implements IFish {
+  Color color;
+  double speedX;
+  int scale;
+  int x;
+  int y;
+  
+  AFish(Color color, double speedX, int scale, int x, int y) {
+    this.color = color;
+    this.speedX = speedX;
+    this.scale = scale;
+    this.x = x;
+    this.y = y;
+    
+    if (this.x > IConstants.GAME_WIDTH) {
+      this.x = IConstants.GAME_WIDTH;
+    }
+    
+    else if(this.x < 0) {
+      this.x = 0;
+    }
+    
+    if (this.y > IConstants.GAME_HEIGHT) {
+      this.y = IConstants.GAME_HEIGHT;
+    }
+    
+    else if(this.y < 0) {
+      this.y = 0;
+    }
+    
+  }
+  
+  AFish(Color color, double speedX, int scale) {
+    Random rand = new Random();
+    this.scale = rand.nextInt(20) + 1;
+    this.speedX = rand.nextInt(10) - 4;
+    if (this.speedX == 0) {
+      this.speedX = 1;
+    }
+    if (speedX < 0) {
+      this.x = IConstants.GAME_WIDTH;
+    }     
+    else {
+      this.x = 0;
+    }    
+    this.y = rand.nextInt(IConstants.GAME_HEIGHT) + 1;
+  }
+  
+  public WorldImage fishImage() {
+    WorldImage tri = new RotateImage(new EquilateralTriangleImage(this.scale * 18, OutlineMode.SOLID, this.color), 90);
+    WorldImage ellipse = new EllipseImage(this.scale * 30, this.scale * 15, OutlineMode.SOLID, this.color);
+    WorldImage fish = new OverlayOffsetAlign(AlignModeX.LEFT, AlignModeY.MIDDLE, ellipse, 0, 0, tri);
+    
+    if (this.speedX > 0) {
+      return fish;
+    }
+    else {
+      return new RotateImage(fish, 180);
+    }
+  }
+  
+  public WorldScene placeOnScene(WorldScene sceneSoFar) {
+    return sceneSoFar.placeImageXY(this.fishImage(), this.x, this.y);
+  }
+}
+
+class Player extends AFish {
+  double speedY;
+
+  Player(Color color, double speedX, int scale, int x, int y, double speedY) {
+    super(color, speedX, scale, x, y);
+    this.speedY = speedY;
+  }
+
+  public Player moveFish(String ke) {
+    if (ke.equals("right")) {
+      return new Player(this.color, 1, this.scale, this.x + 5, this.y, this.speedY);
+    } else if (ke.equals("left")) {
+        return new Player(this.color, -1, this.scale, this.x - 5, this.y, this.speedY);
+    } else if (ke.equals("up")) {
+        return new Player(this.color, this.speedX, this.scale, this.x, this.y - 5, this.speedY);
+    } else if (ke.equals("down")) {
+        return new Player(this.color, this.speedX, this.scale, this.x, this.y + 5, this.speedY);
+    } else {
+      return this;
+    }
+  }
+
+
+
+  @Override
+  public IFish move() {
+    return this;
+  }
+
+  
+}
+
+class Fish extends AFish {
+
+  Fish(Color color, double speedX, int scale, int x, int y) {
+    super(color, speedX, scale, x, y);
+    
+  }
+  
+  Fish(Color color, double speedX, int scale) {
+    super(color, speedX, scale);
+  }
+
+  @Override
+  public IFish move() {
+    return new Fish(this.color, this.speedX, this.scale, this.x + (int)this.speedX, this.y);
+  }
+  
+}
+
+class ExamplesFishyGame {
+  IFish fish1 = new Fish(Color.pink, 5, 5, 0, 300);
+  Player player1 = new Player(Color.orange, 1.0, 1, 400, 300, 0.0);
+  ILoFish l1 = new ConsLoFish(fish1, new MtLoFish());
+  IFish fish2 = new Fish(Color.pink, 0, 0);
+  
+  
+  boolean testFishyGame(Tester t) {
+    FishGame fg = new FishGame(0, player1, new MtLoFish());
+    return fg.bigBang(IConstants.GAME_WIDTH, IConstants.GAME_HEIGHT);
+  }
+  
+  boolean testDrawFish(Tester t) {
+    FishGame fg = new FishGame(0, player1, new MtLoFish());
+    
+    return t.checkExpect(l1.drawAllFish(fg.getEmptyScene()), 
+        fg.getEmptyScene().placeImageXY(fish1.fishImage(), 0, 300).
+        placeImageXY(player1.fishImage(), player1.x, player1.y)); 
+
+  }
+}

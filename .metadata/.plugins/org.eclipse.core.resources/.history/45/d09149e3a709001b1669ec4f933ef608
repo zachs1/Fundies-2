@@ -1,0 +1,123 @@
+import tester.*;
+
+interface IAT { 
+  //are the two given names in the same generation for this IAT?
+  boolean sameGen(String name1, String name2);
+  
+  // is the given name in this IAT?
+  boolean containsName(String name);
+  
+  // returns the depth at which this name exists in this IAT, assuming we know the name
+  // is in this IAT
+  int getNameDepth(String name, int acc);
+}
+
+class Unknown implements IAT {
+
+  //are the two given names in the same generation for this IAT?
+  @Override
+  public boolean sameGen(String name1, String name2) {
+    return false;
+  }
+
+  //is the given name in this IAT?
+  @Override
+  public boolean containsName(String name) {
+    return false;
+  }
+
+  //returns the depth at which this name exists in this IAT, assuming we know the name
+  // is in this IAT
+  @Override
+  public int getNameDepth(String name, int acc) {
+    return -1;
+  } 
+  
+  
+}
+
+class Person implements IAT {  
+  String name;  
+  IAT dad;   
+  IAT mom;  
+  
+  Person(String name, IAT dad, IAT mom) {    
+    this.name = name;    
+    this.dad = dad;    
+    this.mom = mom;  
+  }
+
+  //are the two given names in the same generation for this IAT?
+  @Override
+  public boolean sameGen(String name1, String name2) {
+    if(this.containsName(name1) && this.containsName(name2)) {
+      return this.getNameDepth(name1, 0) == this.getNameDepth(name2, 0);
+    }
+    
+    else {
+      return false;
+    }
+  }
+
+  //is the given name in this IAT?
+  @Override
+  public boolean containsName(String name) {
+    if(this.name.compareTo(name) == 0) {
+      return true;
+    }
+    
+    else {
+      return this.dad.containsName(name)
+          || this.mom.containsName(name);
+    }
+  }
+
+  //returns the depth at which this name exists in this IAT, assuming we know the name
+  // is in this IAT
+  @Override
+  public int getNameDepth(String name, int acc) {
+    if(this.name.compareTo(name) == 0) {
+      return acc;
+    }
+    
+    else {
+      return Math.max(this.mom.getNameDepth(name, acc + 1), 
+          this.dad.getNameDepth(name, acc + 1));
+    }
+  }
+}
+
+class ExamplesIAT {    
+  IAT uk = new Unknown();
+  IAT davisSr = new Person("Davis", new Unknown(), new Unknown());    
+  IAT edna = new Person("Edna", new Unknown(), new Unknown());    
+  IAT david = new Person("David", davisSr, edna);    
+  IAT carl = new Person("Carl", new Unknown(), new Unknown());    
+  IAT candace = new Person("Candace", david, new Unknown());    
+  IAT claire = new Person("Claire", new Unknown(), new Unknown());    
+  IAT bill = new Person("Bill", carl, candace);    
+  IAT bree = new Person("Bree", new Unknown(), claire);    
+  IAT anthony = new Person("Anthony", bill, bree);
+  
+  boolean testSameGen(Tester t) {
+    return t.checkExpect(this.anthony.sameGen("Claire", "Candace"), true)
+        && t.checkExpect(this.anthony.sameGen("Claie", "Bree"), false)
+        && t.checkExpect(this.anthony.sameGen("Davis", "Edna"), true)
+        && t.checkExpect(this.uk.sameGen("Geraldo", "Lee"), false);
+  }
+  
+  boolean testContainsName(Tester t) {
+    return t.checkExpect(this.anthony.containsName("Jose"), false)
+        && t.checkExpect(this.uk.containsName("Momo"), false)
+        && t.checkExpect(this.bill.containsName("Bill"), true)
+        && t.checkExpect(this.bill.containsName("Edna"), true);
+  }
+  
+  boolean testGetNameDepth(Tester t) {
+    return t.checkExpect(this.anthony.getNameDepth("Anthony", 0), 0)
+        && t.checkExpect(this.anthony.getNameDepth("David", 0), 3)
+        && t.checkExpect(this.uk.getNameDepth("Horatio", 100), -1)
+        && t.checkExpect(this.david.getNameDepth("Edna", 0), 1);
+  }
+}
+

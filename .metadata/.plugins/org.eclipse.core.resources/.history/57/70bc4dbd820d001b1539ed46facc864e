@@ -1,0 +1,31 @@
+import tester.*;                // The tester library
+import java.util.Random;
+import javalib.worldimages.*;   // images, like RectangleImage or OverlayImages
+import javalib.funworld.*;      // the abstract World class and the big-bang library
+import java.awt.Color;          // general colors (as triples of red,green,blue values)
+                                // and predefined colors (Red, Green, Yellow, Blue, Black, White)
+
+
+class FishGame extends World {
+  
+  @Override
+  public WorldScene makeScene() {
+    return this.getEmptyScene();
+  }
+  
+}
+
+
+interface IFish {}
+
+class Player implements IFish {}
+
+class Fish implements IFish {}
+
+class ExamplesFishyGame {
+  
+  boolean testFishyGame(Tester t) {
+    FishGame fg = new FishGame();
+    fg.bigBang(800, 600);
+  }
+}

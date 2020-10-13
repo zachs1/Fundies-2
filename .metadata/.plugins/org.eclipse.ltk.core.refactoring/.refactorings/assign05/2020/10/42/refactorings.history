@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Change method &apos;AFish.AFish(Color color, int speedX, int scale, int x, int y)&apos; to &apos;AFish(Color color, int speedX, int scale, int x, int y)&apos;&#x0D;&#x0A;- Original project: &apos;assign05&apos;&#x0D;&#x0A;- Original element: &apos;AFish.AFish(...)&apos;&#x0D;&#x0A;- Changed parameters:&#x0D;&#x0A;     double speedX" delegate="false" deprecate="true" description="Change method &apos;AFish&apos;" flags="589830" id="org.eclipse.jdt.ui.change.method.signature" input="/src&lt;{Fishy.java[AFish~AFish~QColor;~D~I~I~I" name="AFish" parameter1="Color color 0 Color color false" parameter2="double speedX 1 int speedX false" parameter3="int scale 2 int scale false" parameter4="int x 3 int x false" parameter5="int y 4 int y false" stamp="1602625041002" version="1.0"/>
+</session>
